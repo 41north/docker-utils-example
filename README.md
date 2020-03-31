@@ -60,19 +60,19 @@ docker-compose up -d
 You can check the status of the services by running `docker-compose logs -f --tail 100`. After a minute or two you should 
 be able to access the following from browser:
 
-[Traefik Admin](http://localhost:8080)
+Traefik Admin [http://localhost:8080](http://localhost:8080)
 
 ![Traefik admin panel](./images/traefik.png)
 
-[PG Web](http://pgweb.example.local)
+PG Web [http://pgweb.example.local](http://pgweb.example.local)
 
 ![PG Web Admin](./images/pgweb.png)
 
-[API](http://api.example.local)
+API [http://api.example.local](http://api.example.local)
 
 ![API hello world](./images/api.png)
 
-[Frontend](http://example.local)
+Frontend [http://example.local](http://example.local)
  
 ![Frontend hello world](./images/frontend.png)
  
