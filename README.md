@@ -118,6 +118,6 @@ Note that the development build is not optimized.
 To create a production build, use yarn build.
 ```
 
-You can access the frontend via `http://localhost:3000` as you would normally, without the need to install `node` or `yarn`.
+You can access the frontend via [http://localhost:3000](http://localhost:3000) as you would normally, without the need to install `node` or `yarn`.
 
 The version for the node image is controlled via the `.env` file.  
