@@ -1,0 +1,98 @@
+version: '3.7'
+
+networks:
+
+  net:
+
+volumes:
+
+  postgres:
+
+services:
+
+  traefik:
+    image: traefik:v2.0
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker-utils/traefik/traefik.yml:/etc/traefik/traefik.yml
+    networks:
+      - net
+    ports:
+      - 80:80
+      - 8080:8080
+
+  postgres:
+    image: postgres:${POSTGRES_VERSION}
+    restart: unless-stopped
+    shm_size: 4g
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - net
+    environment:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      POSTGRES_DB:
+
+  pgweb:
+    image: sosedoff/pgweb:0.11.6
+    restart: unless-stopped
+    networks:
+      - net
+    depends_on:
+      - postgres
+    command: "/usr/bin/pgweb --bind=0.0.0.0 --listen=8082 --url postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgweb.rule=Host(`pgweb.${BASE_DOMAIN}`)"
+      - "traefik.http.services.pgweb.loadbalancer.server.port=8082"
+
+  mailhog:
+    image: mailhog/mailhog
+    networks:
+      - net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailhog.rule=Host(`mailhog.${BASE_DOMAIN}`)"
+      - "traefik.http.services.mailhog.loadbalancer.server.port=8025"
+
+  api:
+    image: node:${NODE_VERSION}
+    working_dir: /usr/src/app
+    user: "${USER_ID}:${GROUP_ID}"
+    command: sh -c "yarn install && yarn start:dev"
+    restart: unless-stopped
+    volumes:
+      - ./api:/usr/src/app
+    networks:
+      - net
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.${BASE_DOMAIN}`)"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"
+
+  client:
+    image: node:${NODE_VERSION}
+    working_dir: /usr/src/app
+    user: "${USER_ID}:${GROUP_ID}"
+    command: sh -c "yarn install && yarn start"
+    restart: unless-stopped
+    volumes:
+      - ./client:/usr/src/app
+    networks:
+      - net
+    stdin_open: true  # required to keep react process alive
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=Host(`${BASE_DOMAIN}`)"
+      - "traefik.http.services.client.loadbalancer.server.port=3000"
+
